@@ -73,14 +73,14 @@ void main() {
       await tester.tap(find.text('Paieška').last);
       await tester.pumpAndSettle();
       expect(find.text('Kainų informacija nepasiekiama'), findsOneWidget);
-      expect(find.text('Produktų paieška bus čia.'), findsNothing);
+      expect(find.text('Įveskite bent 2 simbolius'), findsNothing);
 
       // The decision can be changed from the explanation.
       await tester.tap(find.text('Patvirtinti amžių'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Taip'));
       await tester.pumpAndSettle();
-      expect(find.text('Produktų paieška bus čia.'), findsOneWidget);
+      expect(find.text('Įveskite bent 2 simbolius'), findsOneWidget);
     });
 
     testWidgets('account and settings stay available when declined',
@@ -113,7 +113,7 @@ void main() {
 
       await tester.tap(find.text('Paieška').last);
       await tester.pumpAndSettle();
-      expect(find.text('Produktų paieška bus čia.'), findsOneWidget);
+      expect(find.text('Įveskite bent 2 simbolius'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Atgal'));
       await tester.pumpAndSettle();
