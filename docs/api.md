@@ -126,22 +126,41 @@ Visada `202` (neatskleidžia, ar paskyra yra); `422 email_invalid` tik blogam fo
 
 ---
 
-## Parduotuvės 🕓
+## Parduotuvės (NI-02: `cities` ir `stores` ✅, `stores/{id}/prices` 🕓)
 
-### `GET /api/v1/stores?cityId=1&q=maxima`
-Visi parametrai neprivalomi.
+Prisijungti nereikia (leidžiama svčiui). Vietos duomenys naudojami tik vienai paieškai: nesaugomi ir nelogginami.
+
+### ✅ `GET /api/v1/cities`
+Miestų sąrašas pagal pavadinimą.
+```json
+{ "items": [ { "id": 2, "name": "Kaunas" }, { "id": 3, "name": "Klaipėda" }, { "id": 1, "name": "Vilnius" } ] }
+```
+
+### ✅ `GET /api/v1/stores`
+Vienas iš dviejų režimų:
+
+| Režimas | Parametrai | Rikiavimas |
+|---|---|---|
+| Netoliese | `lat` (−90…90), `lng` (−180…180), `radiusKm` (sveikas 1–50) – visi trys | pagal atstumą (Haversine), artimiausia pirma; yra `distanceKm` |
+| Pagal miestą | `cityId` | pagal pavadinimą; `distanceKm` nėra |
+
+Blogos reikšmės, abu režimai kartu, nė vieno ar ne visi trys GPS parametrai – `422 validation_failed`; neskaitomas skaičius (pvz. `lat=abc`) – `400 bad_request`. Parduotuvių nerasta (ar nezinomas `cityId`) – `200` su tuščiu `items`. Daugiausia 200 įrašų.
 ```json
 {
   "items": [
     {
-      "id": 1,
-      "name": "Maxima XX",
-      "address": "Ukmergės g. 282",
+      "id": 2,
+      "name": "Rimi Hyper",
+      "address": "Ozo g. 25",
+      "latitude": 54.7117,
+      "longitude": 25.2827,
+      "distanceKm": 3.67,
       "city": { "id": 1, "name": "Vilnius" }
     }
   ]
 }
 ```
+Seed koordinatės yra apytikslės (iki kvartalo tikslumo).
 
 ### `GET /api/v1/stores/{storeId}/prices`
 Naujausia patvirtinta (`Approved`) kiekvieno produkto kaina parduotuvėje.

@@ -1,4 +1,6 @@
 import 'package:alusekis/app.dart';
+import 'package:alusekis/core/api/api_client.dart';
+import 'package:alusekis/features/stores/map_provider.dart';
 import 'package:alusekis/core/storage/app_preferences.dart';
 import 'package:alusekis/core/storage/session_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,12 +16,16 @@ Future<AppPreferences> _pumpApp(
 }) async {
   SharedPreferences.setMockInitialValues(stored);
   final prefs = AppPreferences(await SharedPreferences.getInstance());
+  final adapter = FakeApiAdapter();
+  scriptStoreReplies(adapter);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         appPreferencesProvider.overrideWithValue(prefs),
         // The real secure storage needs a platform plugin.
         sessionStorageProvider.overrideWithValue(InMemorySessionStorage()),
+        httpClientAdapterProvider.overrideWithValue(adapter),
+        mapProviderProvider.overrideWithValue(const FakeMapProvider()),
       ],
       child: const AlusekisApp(),
     ),
@@ -43,7 +49,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(_ageQuestion), findsNothing);
-      expect(find.text('Parduotuvių sąrašas bus čia.'), findsOneWidget);
+      expect(find.text('Naudoti vietą'), findsOneWidget);
       expect(prefs.ageConfirmed, isTrue);
     });
 
@@ -51,7 +57,7 @@ void main() {
       await _pumpApp(tester, stored: {'age_confirmed': true});
 
       expect(find.text(_ageQuestion), findsNothing);
-      expect(find.text('Parduotuvių sąrašas bus čia.'), findsOneWidget);
+      expect(find.text('Naudoti vietą'), findsOneWidget);
     });
 
     testWidgets('"Ne" blocks price screens and explains why', (tester) async {
@@ -62,7 +68,7 @@ void main() {
 
       expect(prefs.ageConfirmed, isFalse);
       expect(find.text('Kainų informacija nepasiekiama'), findsOneWidget);
-      expect(find.text('Parduotuvių sąrašas bus čia.'), findsNothing);
+      expect(find.text('Naudoti vietą'), findsNothing);
 
       await tester.tap(find.text('Paieška').last);
       await tester.pumpAndSettle();
@@ -111,7 +117,7 @@ void main() {
 
       await tester.tap(find.byTooltip('Atgal'));
       await tester.pumpAndSettle();
-      expect(find.text('Parduotuvių sąrašas bus čia.'), findsOneWidget);
+      expect(find.text('Naudoti vietą'), findsOneWidget);
     });
 
     testWidgets('settings opens from Paskyra and has a back arrow',

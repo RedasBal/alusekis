@@ -60,8 +60,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Name).HasMaxLength(150);
             e.Property(x => x.Address).HasMaxLength(250);
             e.HasIndex(x => new { x.CityId, x.Name, x.Address }).IsUnique();
+            // Serves the bounding-box pre-filter of the nearby search.
+            e.HasIndex(x => new { x.Latitude, x.Longitude });
             e.HasOne(x => x.City).WithMany(x => x.Stores)
                 .HasForeignKey(x => x.CityId).OnDelete(DeleteBehavior.Restrict);
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_Stores_Latitude", "\"Latitude\" IS NULL OR \"Latitude\" BETWEEN -90 AND 90");
+                t.HasCheckConstraint("CK_Stores_Longitude", "\"Longitude\" IS NULL OR \"Longitude\" BETWEEN -180 AND 180");
+            });
         });
 
         modelBuilder.Entity<Product>(e =>

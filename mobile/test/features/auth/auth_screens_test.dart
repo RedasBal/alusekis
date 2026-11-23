@@ -2,6 +2,7 @@ import 'package:alusekis/app.dart';
 import 'package:alusekis/core/api/api_client.dart';
 import 'package:alusekis/core/storage/app_preferences.dart';
 import 'package:alusekis/core/storage/session_storage.dart';
+import 'package:alusekis/features/stores/map_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -29,12 +30,14 @@ Future<ProviderContainer> _pumpApp(
   SharedPreferences.setMockInitialValues({'age_confirmed': true});
   final prefs = AppPreferences(await SharedPreferences.getInstance());
   _storage = InMemorySessionStorage(storedToken);
+  scriptStoreReplies(_adapter); // the start screen is the stores screen
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         appPreferencesProvider.overrideWithValue(prefs),
         sessionStorageProvider.overrideWithValue(_storage),
         httpClientAdapterProvider.overrideWithValue(_adapter),
+        mapProviderProvider.overrideWithValue(const FakeMapProvider()),
       ],
       child: const AlusekisApp(),
     ),
@@ -126,7 +129,7 @@ void main() {
       await _type(tester, 1, 'short');
       await _submit(tester, 'Registruotis');
       expect(find.text('Slaptažodis turi būti 12–128 simbolių.'), findsOneWidget);
-      expect(_adapter.requests, isEmpty);
+      expect(_adapter.requestsTo('POST', _register), isEmpty);
     });
 
     testWidgets('a taken e-mail is explained next to the e-mail field',
