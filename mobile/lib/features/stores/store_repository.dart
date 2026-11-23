@@ -4,6 +4,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/api/api_error_messages_lt.dart';
 import 'store_models.dart';
+import 'store_prices_models.dart';
 
 /// Reads cities and stores from the server. Guests may call these endpoints.
 class StoreRepository {
@@ -31,6 +32,20 @@ class StoreRepository {
         ),
         StoreItem.fromJson,
       );
+
+  Future<StorePricesPage> storePrices(int storeId, int page, int pageSize) async {
+    final data = await _api.get(
+      '/stores/$storeId/prices',
+      queryParameters: {'page': page, 'pageSize': pageSize},
+    );
+    try {
+      return StorePricesPage.fromJson(data as Map<String, dynamic>);
+    } on TypeError {
+      throw const ApiException(
+        ApiError(kind: ApiErrorKind.unknown, userMessage: messageForUnknown),
+      );
+    }
+  }
 
   List<T> _items<T>(dynamic data, T Function(Map<String, dynamic>) parse) {
     try {

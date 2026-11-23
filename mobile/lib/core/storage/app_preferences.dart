@@ -21,6 +21,7 @@ class AppPreferences {
   static const _cityKey = 'city';
   static const _radiusKey = 'search_radius_km';
   static const _ageKey = 'age_confirmed';
+  static const _cachePrefix = 'cache_';
 
   ThemeMode get themeMode => switch (_prefs.getString(_themeKey)) {
         'light' => ThemeMode.light,
@@ -50,6 +51,14 @@ class AppPreferences {
 
   Future<void> setRadiusKm(int km) =>
       _prefs.setInt(_radiusKey, km.clamp(minRadiusKm, maxRadiusKm));
+
+  /// Cached server data (JSON text) kept for offline use; see the stores' price cache.
+  String? getCachedJson(String key) => _prefs.getString('$_cachePrefix$key');
+
+  Future<void> setCachedJson(String key, String json) =>
+      _prefs.setString('$_cachePrefix$key', json);
+
+  Future<void> removeCachedJson(String key) => _prefs.remove('$_cachePrefix$key');
 
   bool get ageConfirmed => _prefs.getBool(_ageKey) ?? false;
 
