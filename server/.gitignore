@@ -1,0 +1,14 @@
+# .NET build output
+bin/
+obj/
+TestResults/
+*.user
+
+# Local SQLite databases (never commit data)
+*.db
+*.db-shm
+*.db-wal
+
+# Local secrets / overrides
+appsettings.*.local.json
+.env
