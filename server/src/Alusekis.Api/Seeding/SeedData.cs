@@ -15,20 +15,24 @@ public static class SeedData
 
     public static readonly IReadOnlyList<string> Cities = ["Vilnius", "Kaunas", "Klaipėda"];
 
+    /// <summary>
+    /// Coordinates are approximate (to the neighbourhood, not the doorstep): good enough for
+    /// distance search and map demos, not a geocoded address register.
+    /// </summary>
     public static readonly IReadOnlyList<SeedStore> Stores =
     [
-        new("Vilnius", "Maxima XX", "Ukmergės g. 282"),
-        new("Vilnius", "Rimi Hyper", "Ozo g. 25"),
-        new("Vilnius", "Iki", "Žirmūnų g. 64"),
-        new("Vilnius", "Lidl", "Kalvarijų g. 202"),
-        new("Vilnius", "Norfa", "Šeškinės g. 12"),
-        new("Kaunas", "Maxima XXX", "Savanorių pr. 255"),
-        new("Kaunas", "Rimi", "Jonavos g. 3"),
-        new("Kaunas", "Iki", "Pramonės pr. 16"),
-        new("Kaunas", "Lidl", "Taikos pr. 141"),
-        new("Klaipėda", "Maxima XX", "Taikos pr. 61"),
-        new("Klaipėda", "Rimi", "Liepojos g. 10"),
-        new("Klaipėda", "Norfa", "Šilutės pl. 35"),
+        new("Vilnius", "Maxima XX", "Ukmergės g. 282", 54.7400, 25.2300),
+        new("Vilnius", "Rimi Hyper", "Ozo g. 25", 54.7117, 25.2827),
+        new("Vilnius", "Iki", "Žirmūnų g. 64", 54.7183, 25.2977),
+        new("Vilnius", "Lidl", "Kalvarijų g. 202", 54.7250, 25.2800),
+        new("Vilnius", "Norfa", "Šeškinės g. 12", 54.7208, 25.2440),
+        new("Kaunas", "Maxima XXX", "Savanorių pr. 255", 54.8920, 23.8780),
+        new("Kaunas", "Rimi", "Jonavos g. 3", 54.9040, 23.9420),
+        new("Kaunas", "Iki", "Pramonės pr. 16", 54.9150, 23.9630),
+        new("Kaunas", "Lidl", "Taikos pr. 141", 54.9230, 23.8890),
+        new("Klaipėda", "Maxima XX", "Taikos pr. 61", 55.6835, 21.1578),
+        new("Klaipėda", "Rimi", "Liepojos g. 10", 55.7100, 21.1230),
+        new("Klaipėda", "Norfa", "Šilutės pl. 35", 55.6810, 21.1740),
     ];
 
     public static readonly IReadOnlyList<SeedProduct> Products =
@@ -106,7 +110,7 @@ public static class SeedData
 
 public sealed record SeedUser(string Email, string DisplayName, Role Role);
 
-public sealed record SeedStore(string City, string Name, string Address);
+public sealed record SeedStore(string City, string Name, string Address, double Latitude, double Longitude);
 
 public sealed record SeedProduct(string Name, string Brand, int VolumeMl, int BaseCents);
 

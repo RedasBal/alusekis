@@ -91,6 +91,10 @@ public sealed class DataSeeder(AppDbContext db)
                 created++;
             }
 
+            // Rows seeded before coordinates existed are completed in place, never duplicated.
+            store.Latitude = seed.Latitude;
+            store.Longitude = seed.Longitude;
+
             result.Add(store);
         }
 

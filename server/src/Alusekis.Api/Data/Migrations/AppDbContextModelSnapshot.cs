@@ -325,6 +325,12 @@ namespace Alusekis.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -332,10 +338,17 @@ namespace Alusekis.Api.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Latitude", "Longitude");
+
                     b.HasIndex("CityId", "Name", "Address")
                         .IsUnique();
 
-                    b.ToTable("Stores");
+                    b.ToTable("Stores", t =>
+                        {
+                            t.HasCheckConstraint("CK_Stores_Latitude", "\"Latitude\" IS NULL OR \"Latitude\" BETWEEN -90 AND 90");
+
+                            t.HasCheckConstraint("CK_Stores_Longitude", "\"Longitude\" IS NULL OR \"Longitude\" BETWEEN -180 AND 180");
+                        });
                 });
 
             modelBuilder.Entity("Alusekis.Api.Domain.User", b =>
