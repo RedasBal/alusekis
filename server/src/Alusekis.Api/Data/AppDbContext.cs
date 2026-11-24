@@ -134,6 +134,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<RequestResult>(e =>
         {
             e.Property(x => x.IdempotencyKey).HasMaxLength(100);
+            e.Property(x => x.RequestFingerprint).HasMaxLength(64);
             e.HasIndex(x => new { x.UserId, x.IdempotencyKey }).IsUnique();
             e.HasIndex(x => x.CreatedAt);
             e.HasOne(x => x.User).WithMany()

@@ -302,27 +302,35 @@ Nezinomas produktas ar parduotuvė (ar neskaitinis ID) – `404 not_found`. Nėr
 
 ---
 
-## Kainos 🕓
+## Kainos (NI-07)
 
-### `POST /api/v1/prices` (prisijungus)
-Kainų istorija nekeičiama – kiekviena pateikta kaina yra naujas įrašas.
+### ✅ `POST /api/v1/prices` (prisijungus: `User` arba `Admin`)
+Patikrintos kainos pateikimas. Kainų istorija nekeičiama: kiekviena pateikta kaina yra **naujas** `PriceEntry`, ankstesni niekada neperrašomi. Laikas (`observedAt` = `createdAt`) imamas iš **serverio**, `submittedByUserId` – prisijungęs vartotojas, būsena iškart `Approved` (kad kiti matytų). Neprisijungęs – `401 unauthorized`, rolė `Guest` – `403 forbidden` (tikrinama tik serveryje).
 ```json
-// užklausa (+ Idempotency-Key)
-{ "productId": 1, "storeId": 1, "priceCents": 155, "observedAt": "2026-11-23T08:45:00Z" }
+// užklausa
+{ "productId": 1, "storeId": 1, "priceCents": 155, "idempotencyKey": "2b1f0c3e-...", "confirmLargeChange": false }
 ```
 ```json
 // 201
-{
-  "id": 61,
-  "productId": 1,
-  "storeId": 1,
-  "priceCents": 155,
-  "status": "Pending",
-  "observedAt": "2026-11-23T08:45:00Z",
-  "createdAt": "2026-11-23T08:46:02Z"
-}
+{ "id": 61, "productId": 1, "storeId": 1, "priceCents": 155, "observedAt": "2026-11-24T08:46:02Z", "isLargeChange": false }
 ```
-`422 validation_failed` – kaina už 1–50000 ribų, `observedAt` ateityje ir pan.; `404 not_found` – nėra produkto ar parduotuvės.
+
+| Atvejis | Atsakymas |
+|---|---|
+| `priceCents` nėra ar už 1–50000 | `422 price_invalid` |
+| `idempotencyKey` nėra, tuščias ar > 100 simb.; nėra `productId`/`storeId` | `422 validation_failed` |
+| Nėra produkto ar parduotuvės | `404 not_found` |
+| Daugiau nei 50 % nuo ankstesnės galiojančios (`Approved`) šios poros kainos ir be `confirmLargeChange: true` | `409 large_price_change` su `previousPriceCents` (žr. žemiau) |
+| Tas pats `idempotencyKey` (tam pačiam vartotojui) su **tuo pačiu** turiniu | grąžinamas pirminis atsakymas (tas pats statusas ir JSON), antraštė `Idempotency-Replayed: true`, nieko naujo nesukuriama |
+| Tas pats `idempotencyKey` su **kitu** turiniu (`productId`, `storeId`, `priceCents`, `confirmLargeChange`) | `409 idempotency_key_reused` |
+
+Didelio skirtumo taisyklė (FR-08), sveikaisiais skaičiais: `abs(nauja − sena) * 100 > sena * 50`. Lygiai 50 % – dar leidžiama. Jei ankstesnės kainos nėra, tikrinimo nėra. Patvirtinus įrašas sukuriamas su `isLargeChange: true`.
+```json
+// 409
+{ "code": "large_price_change", "message": "...", "requestId": "...", "previousPriceCents": 149 }
+```
+
+Nesėkmingi atsakymai nesaugomi, todėl po `409 large_price_change` tas pats raktas gali būti naudojamas su `confirmLargeChange: true`. `PriceEntry`, audito įrašas (`PriceSubmitted`, be raktų ir slaptažodžių) ir išsaugotas atsakymas rašomi **vienoje transakcijoje**: bet kokia klaida – nieko neišsaugoma.
 
 ---
 

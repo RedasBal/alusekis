@@ -8,6 +8,8 @@ import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
 import '../compare/open_comparison.dart';
+import '../submit_price/open_submit_price.dart';
+import '../submit_price/submit_price_models.dart';
 import 'store_prices_controller.dart';
 import 'store_prices_models.dart';
 
@@ -41,6 +43,24 @@ class StorePricesScreen extends ConsumerWidget {
             moreError: state.moreError,
             onRetry: controller.load,
             onLoadMore: controller.loadMore,
+            onSubmitPrice: (price) async {
+              final saved = await openSubmitPrice(
+                context,
+                ref,
+                SubmitPriceTarget(
+                  productId: price.productId,
+                  productName: price.productName,
+                  volumeMl: price.volumeMl,
+                  storeId: data.store.id,
+                  storeName: data.store.name,
+                  currentPriceCents: price.priceCents,
+                ),
+              );
+              // Back from a saved price: load again so the new price shows.
+              if (saved) {
+                controller.load();
+              }
+            },
           ),
         ),
       ),
@@ -55,6 +75,7 @@ class _PricesList extends StatelessWidget {
     required this.moreError,
     required this.onRetry,
     required this.onLoadMore,
+    required this.onSubmitPrice,
   });
 
   final StorePricesData data;
@@ -62,6 +83,7 @@ class _PricesList extends StatelessWidget {
   final String? moreError;
   final VoidCallback onRetry;
   final VoidCallback onLoadMore;
+  final void Function(StorePrice price) onSubmitPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +97,13 @@ class _PricesList extends StatelessWidget {
         if (data.items.isEmpty)
           const _EmptyPrices()
         else
-          for (final price in data.items) _PriceRow(price: price),
+          for (final price in data.items)
+            _PriceRow(
+              price: price,
+              // Saved data means the server cannot be reached (FR-16).
+              offline: data.isFromCache,
+              onSubmit: () => onSubmitPrice(price),
+            ),
         if (loadingMore)
           const Padding(
             padding: EdgeInsets.all(16),
@@ -109,20 +137,23 @@ class _PricesList extends StatelessWidget {
 }
 
 class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.price});
+  const _PriceRow({required this.price, required this.offline, required this.onSubmit});
 
   final StorePrice price;
+  final bool offline;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return MergeSemantics(
-      child: Column(
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        MergeSemantics(
           // The whole row is the tap target (taller than 48 dp): it opens the
           // comparison of this product (id + volume) across stores.
-          InkWell(
+          child: InkWell(
             onTap: () => openComparison(
               context,
               productId: price.productId,
@@ -175,9 +206,13 @@ class _PriceRow extends StatelessWidget {
             ),
           ),
           ),
-          const Divider(height: 1),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+          child: SubmitPriceButton(onPressed: onSubmit, offline: offline),
+        ),
+        const Divider(height: 1),
+      ],
     );
   }
 }

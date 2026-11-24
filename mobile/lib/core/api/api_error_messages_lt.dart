@@ -37,6 +37,12 @@ const Map<String, String> _messagesByCode = {
   'invalid_password': 'Neteisingas slaptažodis.',
   'invalid_reset_token':
       'Atkūrimo kodas neteisingas, nebegalioja arba jau panaudotas.',
+
+  // Kainų pateikimas.
+  'price_invalid': 'Kaina turi būti nuo 0,01 iki 500,00 €.',
+  'large_price_change': 'Kaina labai skiriasi nuo ankstesnės.',
+  'idempotency_key_reused':
+      'Šis pateikimas jau buvo išsiųstas su kita kaina. Bandykite dar kartą.',
 };
 
 /// Picks a message by the server error [code]; falls back to the HTTP

@@ -29,6 +29,7 @@ class ApiError {
     this.code,
     this.requestId,
     this.statusCode,
+    this.body,
   });
 
   final ApiErrorKind kind;
@@ -43,6 +44,10 @@ class ApiError {
   final String? requestId;
 
   final int? statusCode;
+
+  /// The whole error body when it was JSON, for codes that carry extra data
+  /// (e.g. `previousPriceCents` of `large_price_change`). Never shown as is.
+  final Map<String, dynamic>? body;
 
   @override
   String toString() =>
@@ -104,7 +109,9 @@ ApiError _fromResponse(Response<dynamic>? response) {
 
   String? code;
   String? requestId;
+  Map<String, dynamic>? body;
   if (data is Map<String, dynamic>) {
+    body = data;
     final rawCode = data['code'];
     final rawRequestId = data['requestId'];
     code = rawCode is String ? rawCode : null;
@@ -116,6 +123,7 @@ ApiError _fromResponse(Response<dynamic>? response) {
     code: code,
     requestId: requestId,
     statusCode: status,
+    body: body,
     userMessage: messageForServerError(code: code, statusCode: status),
   );
 }

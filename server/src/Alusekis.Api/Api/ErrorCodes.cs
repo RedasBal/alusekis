@@ -27,6 +27,11 @@ public static class ErrorCodes
     public const string InvalidPassword = "invalid_password";
     public const string InvalidResetToken = "invalid_reset_token";
 
+    // Price submission.
+    public const string PriceInvalid = "price_invalid";
+    public const string LargePriceChange = "large_price_change";
+    public const string IdempotencyKeyReused = "idempotency_key_reused";
+
     public static string ForStatus(int statusCode) => statusCode switch
     {
         StatusCodes.Status400BadRequest => BadRequest,
