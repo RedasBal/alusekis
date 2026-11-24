@@ -276,15 +276,27 @@ Nėra kainų – `200` su tuščiu `items` ir `storeCount: 0`. Nezinomas (ar nes
 }
 ```
 
-### `GET /api/v1/products/{productId}/history?storeId=1&limit=50&before=41`
-Produkto kainų istorija, naujausios pirma. `storeId` neprivalomas; `before` – puslapiavimas pagal `priceEntryId` (grąžinamas kaip `nextBefore`, `null` – daugiau nėra).
+### ✅ `GET /api/v1/products/{productId}/stores/{storeId}/history?days=7|30|90` (NI-06)
+Produkto kainų istorija **vienoje parduotuvėje**. Prisijungti nereikia. Anksčiau planuotas `.../history?storeId=` pakeistas šiuo endpoint'u. Istorija nekeičiama ir neeišgalvojama: vienas įrašas = vienas taškas, tarpinės kainos nekuriamos, ta pati kaina keliuose įrašuose lieka keliais taškais.
+
+| Parametras | Taisyklė |
+|---|---|
+| `days` | tik tekstas `7`, `30` arba `90`; trūkstamas = `30`. Kita (`abc`, tuščias, `0`, `8`, `07`, `7.0`, `365`) – `422 validation_failed` |
+
+Langas: įrašai, kurių `observedAt` ≥ `from`, kur `from` = serverio „dabar“ − `days` parų. Įrašas lygiai ties riba įtraukiamas, 1 sekundė anksčiau – ne. Imami tik **patvirtinti** (`Approved`) įrašai (`Rejected` ir `Pending` ne). Rikiavimas: nuo seniausio iki naujausio (`observedAt`, tada `priceEntryId`). `from` ir `to` (= serverio „dabar“) skirti grafiko ašiai.
+
+Nezinomas produktas ar parduotuvė (ar neskaitinis ID) – `404 not_found`. Nėra įrašų per laikotarpį – `200` su tuščiu `items`. Kita parduotuvė ir kita to paties pavadinimo talpa (tai kitas produktas) nemaišomos.
 ```json
 {
+  "product": { "id": 1, "name": "Švyturys Ekstra", "brand": "Švyturys", "volumeMl": 500 },
+  "store": { "id": 1, "name": "Maxima XX", "address": "Ukmergės g. 282" },
+  "days": 30,
+  "from": "2026-10-24T12:00:00Z",
+  "to": "2026-11-23T12:00:00Z",
   "items": [
-    { "priceEntryId": 41, "storeId": 1, "priceCents": 149, "status": "Approved", "observedAt": "2026-10-30T09:00:00Z" },
-    { "priceEntryId": 17, "storeId": 1, "priceCents": 145, "status": "Approved", "observedAt": "2026-10-12T21:00:00Z" }
-  ],
-  "nextBefore": null
+    { "priceEntryId": 17, "priceCents": 145, "observedAt": "2026-10-28T21:00:00Z" },
+    { "priceEntryId": 41, "priceCents": 149, "observedAt": "2026-11-12T09:00:00Z" }
+  ]
 }
 ```
 
