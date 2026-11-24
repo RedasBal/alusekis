@@ -195,15 +195,32 @@ Blogos reikšmės – `422 validation_failed`, neskaitomas skaičius – `400 ba
 
 ---
 
-## Produktai 🕓
+## Produktai (NI-04: `products/search` ✅, kita 🕓)
 
-### `GET /api/v1/products/search?q=svyturys&volumeMl=500&limit=20`
-`q` – privalomas (min. 2 simboliai); paieška nejautri didžiosioms raidėms ir diakritikams (`svyturys` randa „Švyturys“). `volumeMl`, `limit` (1–50, numatyta 20) – neprivalomi.
+### ✅ `GET /api/v1/products/search?q=svyturys` (NI-04)
+Prisijungti nereikia. `q` apkarpomas (trim) ir turi būti **2–100 simbolių**, kitaip `422 validation_failed` su klaidų DTO (trūkstamas, tuščias, 1 ar 101 simbolis).
+
+Paieška pagal pavadinimo **dalį**, nejautri didžiosioms raidėms ir diakritikams: užklausa ir `Product.NormalizedName` normalizuojami ta pačia funkcija (mažosios raidės, be diakritikų, suspausti tarpai), todėl `žalgiris`, `ŽALGIRIS` ir `zalgiris` randa „Žalgiris“. Tekstas lyginamas pažodžiui (jokio LIKE), `%`, `_` ir `'` yra paprasti simboliai. Užklausa, kuri po normalizavimo tampa tuščia (vien jungiamieji ženklai), graužina tuščią sąrašą, ne visą katalogą.
+
+Rikiavimas: pirma pavadinimai, kurie **prasideda** užklausa, tada pagal normalizuotą pavadinimą, tada talpą. Daugiausia **50** rezultatų. Nieko nerasta – `200` su tuščiu `items`.
+
+`lowestPrice` (nebus, jei produktas kainų neturi) – pigiausia iš naujausių **patvirtintų** (`Approved`) kainų parduotuvėse (po vieną įrašą kiekvienoje parduotuvėje; senesnė pakeista kaina, `Rejected` ir `Pending` neskaitomi). `isStale` – `observedAt` senesnis nei 7 paros pagal serverio laikrodį. `brand` nebus, jei nėra.
 ```json
 {
   "items": [
-    { "id": 1, "name": "Švyturys Ekstra", "brand": "Švyturys", "volumeMl": 500 },
-    { "id": 3, "name": "Švyturys Baltijos", "brand": "Švyturys", "volumeMl": 500 }
+    {
+      "id": 1,
+      "name": "Švyturys Ekstra",
+      "brand": "Švyturys",
+      "volumeMl": 500,
+      "lowestPrice": {
+        "priceCents": 139,
+        "storeId": 4,
+        "storeName": "Lidl",
+        "observedAt": "2026-10-28T15:00:00Z",
+        "isStale": true
+      }
+    }
   ]
 }
 ```
