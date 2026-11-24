@@ -43,6 +43,9 @@ const Map<String, String> _messagesByCode = {
   'large_price_change': 'Kaina labai skiriasi nuo ankstesnės.',
   'idempotency_key_reused':
       'Šis pateikimas jau buvo išsiųstas su kita kaina. Bandykite dar kartą.',
+
+  // Produkto pridėjimas.
+  'product_exists': 'Toks produktas jau yra.',
 };
 
 /// Picks a message by the server error [code]; falls back to the HTTP

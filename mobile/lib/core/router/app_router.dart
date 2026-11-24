@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/account_screen.dart';
+import '../../features/add_product/add_product_models.dart';
+import '../../features/add_product/add_product_screen.dart';
 import '../../features/compare/compare_screen.dart';
 import '../../features/compare/open_comparison.dart';
 import '../../features/history/history_screen.dart';
@@ -123,6 +125,11 @@ GoRouter buildRouter() => GoRouter(
           // Opened from a price row, which supplies what the form shows.
           redirect: (context, state) => state.extra is ReportTarget ? null : Routes.stores,
           builder: (context, state) => ReportScreen(target: state.extra! as ReportTarget),
+          path: '/stores/:storeId/add-product',
+          // Opened from a store's prices, which supplies the store the form shows.
+          redirect: (context, state) => state.extra is AddProductTarget ? null : Routes.stores,
+          builder: (context, state) =>
+              AddProductScreen(target: state.extra! as AddProductTarget),
         ),
         GoRoute(
           path: '/products/:productId/stores/:storeId/history',
