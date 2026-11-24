@@ -32,6 +32,9 @@ public static class ErrorCodes
     public const string LargePriceChange = "large_price_change";
     public const string IdempotencyKeyReused = "idempotency_key_reused";
 
+    // Product creation.
+    public const string ProductExists = "product_exists";
+
     public static string ForStatus(int statusCode) => statusCode switch
     {
         StatusCodes.Status400BadRequest => BadRequest,
