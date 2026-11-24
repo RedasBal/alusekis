@@ -13,6 +13,8 @@ abstract final class Routes {
   static String submitPrice(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/price';
 
+  /// "Pranešti apie klaidą" for one price entry.
+  static String reportPrice(int priceEntryId) => '/prices/$priceEntryId/report';
   /// "Pridėti produktą" with the first price in one store.
   static String addProduct(int storeId) => '/stores/$storeId/add-product';
 

@@ -15,6 +15,8 @@ import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
+import '../../features/report/report_models.dart';
+import '../../features/report/report_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/shell/home_shell.dart';
 import '../../features/stores/store_prices_screen.dart';
@@ -119,6 +121,10 @@ GoRouter buildRouter() => GoRouter(
               SubmitPriceScreen(target: state.extra! as SubmitPriceTarget),
         ),
         GoRoute(
+          path: '/prices/:priceEntryId/report',
+          // Opened from a price row, which supplies what the form shows.
+          redirect: (context, state) => state.extra is ReportTarget ? null : Routes.stores,
+          builder: (context, state) => ReportScreen(target: state.extra! as ReportTarget),
           path: '/stores/:storeId/add-product',
           // Opened from a store's prices, which supplies the store the form shows.
           redirect: (context, state) => state.extra is AddProductTarget ? null : Routes.stores,

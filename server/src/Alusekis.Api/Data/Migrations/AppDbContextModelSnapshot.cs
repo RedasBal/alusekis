@@ -202,7 +202,7 @@ namespace Alusekis.Api.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Comment")
-                        .HasMaxLength(1000)
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("PriceEntryId")
@@ -225,6 +225,10 @@ namespace Alusekis.Api.Data.Migrations
 
                     b.Property<DateTime>("SubmittedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

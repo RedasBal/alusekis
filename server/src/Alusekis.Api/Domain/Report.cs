@@ -27,4 +27,10 @@ public class Report
     public long? ResolvedByUserId { get; set; }
 
     public User? ResolvedBy { get; set; }
+
+    /// <summary>
+    /// Concurrency token: whoever resolves a report must increase it, so two moderators
+    /// cannot both decide the same report. Starts at 0 and is not used when creating.
+    /// </summary>
+    public long Version { get; set; }
 }

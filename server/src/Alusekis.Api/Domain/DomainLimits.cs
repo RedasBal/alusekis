@@ -10,4 +10,7 @@ public static class DomainLimits
     /// <summary>Volumes are stored as whole millilitres.</summary>
     public const int MinVolumeMl = 1;
     public const int MaxVolumeMl = 50_000;
+
+    /// <summary>Longest comment of a report, in characters.</summary>
+    public const int MaxReportCommentLength = 500;
 }

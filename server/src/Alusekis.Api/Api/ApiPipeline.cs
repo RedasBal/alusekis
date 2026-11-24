@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Alusekis.Api.Auth;
 using Alusekis.Api.Prices;
 using Alusekis.Api.Products;
+using Alusekis.Api.Reports;
 using Alusekis.Api.Stores;
 using Microsoft.AspNetCore.Http.Timeouts;
 
@@ -84,6 +85,7 @@ public static class ApiPipeline
         v1.MapStores();
         v1.MapProducts();
         v1.MapPrices();
+        v1.MapReports();
 
         return v1;
     }
