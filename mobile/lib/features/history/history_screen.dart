@@ -60,7 +60,11 @@ class PriceHistoryScreen extends ConsumerWidget {
               child: AsyncStateView<PriceHistory>(
                 state: view,
                 onRetry: controller.load,
-                builder: (context, history) => _HistoryBody(history: history),
+                builder: (context, history) => _HistoryBody(
+                  history: history,
+                  period: state.period,
+                  onShowLonger: controller.setPeriod,
+                ),
               ),
             ),
           ],
@@ -127,19 +131,36 @@ class _PeriodChoice extends StatelessWidget {
   }
 }
 
+/// Shown when there is no recorded price in the chosen period.
+const String emptyHistoryMessage = 'Per pasirinktą laikotarpį kainų įrašų nėra';
+
+/// Shown when the period holds exactly one recorded price.
+const String singleEntryMessage = 'Užregistruotas vienas kainos įrašas';
+
 class _HistoryBody extends StatelessWidget {
-  const _HistoryBody({required this.history});
+  const _HistoryBody({
+    required this.history,
+    required this.period,
+    required this.onShowLonger,
+  });
 
   final PriceHistory history;
+  final HistoryPeriod period;
+  final ValueChanged<HistoryPeriod> onShowLonger;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (history.points.isEmpty) {
+      return _EmptyHistory(longer: period.longer, onShowLonger: onShowLonger);
+    }
+
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        if (history.points.isNotEmpty) _PriceChart(history: history),
+        if (history.points.length == 1) const _SingleEntryNotice(),
+        _PriceChart(history: history),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
           child: Text('Užregistruoti kainų įrašai', style: theme.textTheme.titleMedium),
@@ -149,6 +170,82 @@ class _HistoryBody extends StatelessWidget {
           const Divider(height: 1),
         ],
       ],
+    );
+  }
+}
+
+/// No recorded price in the period: says so and, unless this is already the
+/// longest period, offers the next longer one.
+class _EmptyHistory extends StatelessWidget {
+  const _EmptyHistory({required this.longer, required this.onShowLonger});
+
+  final HistoryPeriod? longer;
+  final ValueChanged<HistoryPeriod> onShowLonger;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final longer = this.longer;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(
+                emptyHistoryMessage,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge,
+              ),
+              if (longer != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: () => onShowLonger(longer),
+                  child: Text('Rodyti ilgesnį laikotarpį (${longer.label})'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One recorded price: it is a single point on the chart, and says so.
+class _SingleEntryNotice extends StatelessWidget {
+  const _SingleEntryNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                singleEntryMessage,
+                style: TextStyle(color: scheme.onSecondaryContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

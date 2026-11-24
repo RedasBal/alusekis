@@ -7,6 +7,7 @@ import '../../core/utils/price_format.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
+import '../history/open_history.dart';
 import 'compare_controller.dart';
 import 'compare_models.dart';
 
@@ -186,6 +187,15 @@ class _OfferList extends StatelessWidget {
             offer: offer,
             extraCents: differenceFromCheapestCents(offer, cheapest),
             isCheapest: markCheapest && offer.priceCents == cheapest,
+            // The price history of this product (id + volume) in this store.
+            onTap: () => openHistory(
+              context,
+              productId: comparison.product.id,
+              storeId: offer.storeId,
+              productName: comparison.product.name,
+              volumeMl: comparison.product.volumeMl,
+              storeName: offer.storeName,
+            ),
           ),
           const Divider(height: 1),
         ],
@@ -226,9 +236,17 @@ class _SingleStoreNotice extends StatelessWidget {
 }
 
 class _OfferRow extends StatelessWidget {
-  const _OfferRow({required this.offer, required this.extraCents, required this.isCheapest});
+  const _OfferRow({
+    required this.offer,
+    required this.extraCents,
+    required this.isCheapest,
+    required this.onTap,
+  });
 
   final StoreOffer offer;
+
+  /// Opens this store's price history of the product.
+  final VoidCallback onTap;
 
   /// How much dearer than the cheapest offer, in cents.
   final int extraCents;
@@ -240,8 +258,11 @@ class _OfferRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // The whole row is the tap target (much taller than 48 dp).
     return MergeSemantics(
-      child: Padding(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,8 +322,11 @@ class _OfferRow extends StatelessWidget {
                   ),
               ],
             ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right),
           ],
         ),
+      ),
       ),
     );
   }

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/account/account_screen.dart';
 import '../../features/compare/compare_screen.dart';
 import '../../features/compare/open_comparison.dart';
+import '../../features/history/history_screen.dart';
+import '../../features/history/open_history.dart';
 import '../../features/account/settings_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -98,6 +100,24 @@ GoRouter buildRouter() => GoRouter(
               productId: int.parse(state.pathParameters['id']!),
               productName: hint?.name,
               volumeMl: hint?.volumeMl,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/products/:productId/stores/:storeId/history',
+          redirect: (context, state) =>
+              int.tryParse(state.pathParameters['productId'] ?? '') == null ||
+                      int.tryParse(state.pathParameters['storeId'] ?? '') == null
+                  ? Routes.search
+                  : null,
+          builder: (context, state) {
+            final hint = state.extra is HistoryHint ? state.extra as HistoryHint : null;
+            return PriceHistoryScreen(
+              productId: int.parse(state.pathParameters['productId']!),
+              storeId: int.parse(state.pathParameters['storeId']!),
+              productName: hint?.productName,
+              volumeMl: hint?.volumeMl,
+              storeName: hint?.storeName,
             );
           },
         ),

@@ -16,6 +16,13 @@ enum HistoryPeriod {
 
   /// Shown when the screen opens.
   static const HistoryPeriod defaultPeriod = HistoryPeriod.month;
+
+  /// The next longer period, or null for the longest one (90 days).
+  HistoryPeriod? get longer => switch (this) {
+        HistoryPeriod.week => HistoryPeriod.month,
+        HistoryPeriod.month => HistoryPeriod.quarter,
+        HistoryPeriod.quarter => null,
+      };
 }
 
 class HistoryStore {
