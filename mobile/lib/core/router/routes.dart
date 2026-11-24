@@ -13,6 +13,9 @@ abstract final class Routes {
   static String submitPrice(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/price';
 
+  /// "Pridėti produktą" with the first price in one store.
+  static String addProduct(int storeId) => '/stores/$storeId/add-product';
+
   /// Price history of one product in one store; opened from the comparison.
   static String priceHistory(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/history';

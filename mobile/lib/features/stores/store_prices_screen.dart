@@ -6,6 +6,8 @@ import '../../core/utils/date_format.dart';
 import '../../core/utils/price_format.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
+import '../add_product/add_product_models.dart';
+import '../add_product/open_add_product.dart';
 import '../age_gate/age_gate_host.dart';
 import '../compare/open_comparison.dart';
 import '../submit_price/open_submit_price.dart';
@@ -43,6 +45,17 @@ class StorePricesScreen extends ConsumerWidget {
             moreError: state.moreError,
             onRetry: controller.load,
             onLoadMore: controller.loadMore,
+            onAddProduct: () async {
+              final added = await openAddProduct(
+                context,
+                ref,
+                AddProductTarget(storeId: data.store.id, storeName: data.store.name),
+              );
+              // Back from a saved product: load again so it shows with its price.
+              if (added) {
+                controller.load();
+              }
+            },
             onSubmitPrice: (price) async {
               final saved = await openSubmitPrice(
                 context,
@@ -75,6 +88,7 @@ class _PricesList extends StatelessWidget {
     required this.moreError,
     required this.onRetry,
     required this.onLoadMore,
+    required this.onAddProduct,
     required this.onSubmitPrice,
   });
 
@@ -83,6 +97,7 @@ class _PricesList extends StatelessWidget {
   final String? moreError;
   final VoidCallback onRetry;
   final VoidCallback onLoadMore;
+  final VoidCallback onAddProduct;
   final void Function(StorePrice price) onSubmitPrice;
 
   @override
@@ -94,6 +109,14 @@ class _PricesList extends StatelessWidget {
       children: [
         if (cachedAt != null)
           _CachedNotice(syncedAt: cachedAt, onRetry: onRetry),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            // Saved data means the server cannot be reached (FR-16).
+            child: AddProductButton(onPressed: onAddProduct, offline: data.isFromCache),
+          ),
+        ),
         if (data.items.isEmpty)
           const _EmptyPrices()
         else
