@@ -6,6 +6,8 @@ import '../../features/compare/compare_screen.dart';
 import '../../features/compare/open_comparison.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/history/open_history.dart';
+import '../../features/submit_price/submit_price_models.dart';
+import '../../features/submit_price/submit_price_screen.dart';
 import '../../features/account/settings_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -102,6 +104,17 @@ GoRouter buildRouter() => GoRouter(
               volumeMl: hint?.volumeMl,
             );
           },
+        ),
+        GoRoute(
+          path: Routes.signIn,
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/products/:productId/stores/:storeId/price',
+          // Opened from a price row, which supplies what the form shows.
+          redirect: (context, state) => state.extra is SubmitPriceTarget ? null : Routes.stores,
+          builder: (context, state) =>
+              SubmitPriceScreen(target: state.extra! as SubmitPriceTarget),
         ),
         GoRoute(
           path: '/products/:productId/stores/:storeId/history',

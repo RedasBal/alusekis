@@ -8,6 +8,8 @@ import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
 import '../history/open_history.dart';
+import '../submit_price/open_submit_price.dart';
+import '../submit_price/submit_price_models.dart';
 import 'compare_controller.dart';
 import 'compare_models.dart';
 
@@ -64,7 +66,27 @@ class ProductCompareScreen extends ConsumerWidget {
                 onRetry: controller.load,
                 builder: (context, comparison) => comparison.offers.isEmpty
                     ? const _NoPrices()
-                    : _OfferList(comparison: comparison),
+                    : _OfferList(
+                        comparison: comparison,
+                        onSubmitPrice: (offer) async {
+                          final saved = await openSubmitPrice(
+                            context,
+                            ref,
+                            SubmitPriceTarget(
+                              productId: comparison.product.id,
+                              productName: comparison.product.name,
+                              volumeMl: comparison.product.volumeMl,
+                              storeId: offer.storeId,
+                              storeName: offer.storeName,
+                              currentPriceCents: offer.priceCents,
+                            ),
+                          );
+                          // Back from a saved price: load again so the new price shows.
+                          if (saved) {
+                            controller.load();
+                          }
+                        },
+                      ),
               ),
             ),
           ],
@@ -165,9 +187,10 @@ class _NoPrices extends StatelessWidget {
 }
 
 class _OfferList extends StatelessWidget {
-  const _OfferList({required this.comparison});
+  const _OfferList({required this.comparison, required this.onSubmitPrice});
 
   final ProductComparison comparison;
+  final void Function(StoreOffer offer) onSubmitPrice;
 
   @override
   Widget build(BuildContext context) {
@@ -196,6 +219,7 @@ class _OfferList extends StatelessWidget {
               volumeMl: comparison.product.volumeMl,
               storeName: offer.storeName,
             ),
+            onSubmit: () => onSubmitPrice(offer),
           ),
           const Divider(height: 1),
         ],
@@ -241,9 +265,13 @@ class _OfferRow extends StatelessWidget {
     required this.extraCents,
     required this.isCheapest,
     required this.onTap,
+    required this.onSubmit,
   });
 
   final StoreOffer offer;
+
+  /// Opens "Atnaujinti kainą" for this product in this store.
+  final VoidCallback onSubmit;
 
   /// Opens this store's price history of the product.
   final VoidCallback onTap;
@@ -259,7 +287,10 @@ class _OfferRow extends StatelessWidget {
     final theme = Theme.of(context);
 
     // The whole row is the tap target (much taller than 48 dp).
-    return MergeSemantics(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+    MergeSemantics(
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -328,6 +359,12 @@ class _OfferRow extends StatelessWidget {
         ),
       ),
       ),
+    ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+          child: SubmitPriceButton(onPressed: onSubmit),
+        ),
+      ],
     );
   }
 }

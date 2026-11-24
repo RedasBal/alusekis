@@ -5,6 +5,14 @@ abstract final class Routes {
   /// Price comparison of one product; opened from the search and from a store's prices.
   static String productPrices(int productId) => '/products/$productId/prices';
 
+  /// Sign-in outside the tabs, so any screen can send the user there and get
+  /// them back afterwards (e.g. before submitting a price).
+  static const signIn = '/login';
+
+  /// "Atnaujinti kainą" for one product in one store.
+  static String submitPrice(int productId, int storeId) =>
+      '/products/$productId/stores/$storeId/price';
+
   /// Price history of one product in one store; opened from the comparison.
   static String priceHistory(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/history';
