@@ -8,6 +8,7 @@ import '../../core/utils/price_format.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
+import '../compare/open_comparison.dart';
 import 'product_models.dart';
 import 'product_search_controller.dart';
 import 'search_query.dart';
@@ -181,10 +182,13 @@ class _ResultTile extends StatelessWidget {
                 Text(price.storeName, style: theme.textTheme.bodySmall),
               ],
             ),
-      // Comparing prices and history come in later tasks; for now just the name.
-      onTap: () => ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(item.name))),
+      // The product (id + volume) is compared across stores.
+      onTap: () => openComparison(
+        context,
+        productId: item.id,
+        name: item.name,
+        volumeMl: item.volumeMl,
+      ),
     );
   }
 }

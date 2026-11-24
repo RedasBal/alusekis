@@ -7,6 +7,7 @@ import '../../core/utils/price_format.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
+import '../compare/open_comparison.dart';
 import 'store_prices_controller.dart';
 import 'store_prices_models.dart';
 
@@ -119,7 +120,16 @@ class _PriceRow extends StatelessWidget {
     return MergeSemantics(
       child: Column(
         children: [
-          Padding(
+          // The whole row is the tap target (taller than 48 dp): it opens the
+          // comparison of this product (id + volume) across stores.
+          InkWell(
+            onTap: () => openComparison(
+              context,
+              productId: price.productId,
+              name: price.productName,
+              volumeMl: price.volumeMl,
+            ),
+            child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,8 +169,11 @@ class _PriceRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(formatPrice(price.priceCents), style: theme.textTheme.titleLarge),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right),
               ],
             ),
+          ),
           ),
           const Divider(height: 1),
         ],
