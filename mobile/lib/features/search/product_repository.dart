@@ -5,6 +5,7 @@ import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/api/api_error_messages_lt.dart';
 import '../compare/compare_models.dart';
+import '../history/history_models.dart';
 import 'product_models.dart';
 
 /// Product search on the server. Guests may call it.
@@ -47,6 +48,28 @@ class ProductRepository {
     );
     try {
       return ProductComparison.fromJson(data as Map<String, dynamic>);
+    } on TypeError {
+      throw _unreadable();
+    } on FormatException {
+      throw _unreadable();
+    }
+  }
+
+  /// The recorded prices of one product in one store over the last [period]
+  /// (the server fixes the window by its own clock).
+  Future<PriceHistory> productStoreHistory(
+    int productId,
+    int storeId,
+    HistoryPeriod period, {
+    CancelToken? cancelToken,
+  }) async {
+    final data = await _api.get(
+      '/products/$productId/stores/$storeId/history',
+      queryParameters: {'days': period.days},
+      cancelToken: cancelToken,
+    );
+    try {
+      return PriceHistory.fromJson(data as Map<String, dynamic>);
     } on TypeError {
       throw _unreadable();
     } on FormatException {
