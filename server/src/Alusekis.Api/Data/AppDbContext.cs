@@ -106,7 +106,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<Report>(e =>
         {
-            e.Property(x => x.Comment).HasMaxLength(1000);
+            e.Property(x => x.Comment).HasMaxLength(DomainLimits.MaxReportCommentLength);
+            e.Property(x => x.Version).IsConcurrencyToken();
             e.HasIndex(x => new { x.Status, x.SubmittedAt });
             e.HasOne(x => x.PriceEntry).WithMany()
                 .HasForeignKey(x => x.PriceEntryId).OnDelete(DeleteBehavior.Restrict);

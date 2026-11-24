@@ -154,7 +154,7 @@ public static class PriceEndpoints
     /// The stored answer when this user already used <paramref name="key"/>: replayed for the same
     /// content, rejected for different content. Null when the key is new.
     /// </summary>
-    private static async Task<IResult?> ReplayAsync(
+    internal static async Task<IResult?> ReplayAsync(
         HttpContext http, AppDbContext db, long userId, string key, string fingerprint, CancellationToken ct)
     {
         var stored = await db.RequestResults.AsNoTracking()
@@ -189,7 +189,7 @@ public static class PriceEndpoints
     private static IResult Error(HttpContext http, int status, string code, string message) =>
         ErrorResponses.Result(http, status, code, message);
 
-    private static bool IsUniqueViolation(DbUpdateException ex) =>
+    internal static bool IsUniqueViolation(DbUpdateException ex) =>
         ex.InnerException is SqliteException { SqliteErrorCode: 19 } sqlite
         && sqlite.Message.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase);
 }
