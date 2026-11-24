@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/router/routes.dart';
 import '../../core/storage/app_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/widgets/app_scaffold.dart';
@@ -252,10 +254,11 @@ class _StoreList extends StatelessWidget {
   }
 }
 
-/// Name and address of the tapped store (from a map marker or the list).
-Future<void> showStoreSheet(BuildContext context, StoreItem store) {
+/// Name and address of the tapped store (from a map marker or the list),
+/// with a way on to its prices.
+Future<void> showStoreSheet(BuildContext parentContext, StoreItem store) {
   return showModalBottomSheet<void>(
-    context: context,
+    context: parentContext,
     showDragHandle: true,
     builder: (context) {
       final theme = Theme.of(context);
@@ -295,7 +298,16 @@ Future<void> showStoreSheet(BuildContext context, StoreItem store) {
                   ],
                 ),
               ],
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  GoRouter.of(parentContext)
+                      .push(Routes.storePrices(store.id), extra: store.name);
+                },
+                icon: const Icon(Icons.sell_outlined),
+                label: const Text('Peržiūrėti kainas'),
+              ),
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(

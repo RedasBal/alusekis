@@ -9,6 +9,7 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/reset_password_screen.dart';
 import '../../features/search/search_screen.dart';
 import '../../features/shell/home_shell.dart';
+import '../../features/stores/store_prices_screen.dart';
 import '../../features/stores/stores_screen.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_models.dart';
@@ -26,6 +27,19 @@ GoRouter buildRouter() => GoRouter(
                 GoRoute(
                   path: Routes.stores,
                   builder: (context, state) => const StoresScreen(),
+                  routes: [
+                    GoRoute(
+                      path: ':id/prices',
+                      redirect: (context, state) =>
+                          int.tryParse(state.pathParameters['id'] ?? '') == null
+                              ? Routes.stores
+                              : null,
+                      builder: (context, state) => StorePricesScreen(
+                        storeId: int.parse(state.pathParameters['id']!),
+                        storeName: state.extra as String?,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

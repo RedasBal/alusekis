@@ -25,10 +25,13 @@ class InMemorySessionStorage extends SessionStorage {
 }
 
 class _Reply {
-  const _Reply(this.status, this.body);
+  const _Reply(this.status, this.body, {this.offline = false});
 
   final int status;
   final Object? body;
+
+  /// The request fails like a phone without a connection.
+  final bool offline;
 }
 
 /// Replaces the network: answers requests from scripted replies and records them.
@@ -46,6 +49,11 @@ class FakeApiAdapter implements HttpClientAdapter {
   /// Discards earlier scripted answers for the route and uses this one from now on.
   void replace(String method, String path, {int status = 200, Object? body}) {
     _routes['$method $path'] = [_Reply(status, body)];
+  }
+
+  /// Makes the route fail as if there were no connection (replaces earlier answers).
+  void replaceWithOffline(String method, String path) {
+    _routes['$method $path'] = [const _Reply(0, null, offline: true)];
   }
 
   /// Scripts a standard error DTO.
@@ -73,6 +81,12 @@ class FakeApiAdapter implements HttpClientAdapter {
       throw StateError('No fake reply scripted for $key');
     }
     final reply = replies.length > 1 ? replies.removeAt(0) : replies.first;
+    if (reply.offline) {
+      throw DioException.connectionError(
+        requestOptions: options,
+        reason: 'offline',
+      );
+    }
     return ResponseBody.fromString(
       reply.body == null ? '' : jsonEncode(reply.body),
       reply.status,

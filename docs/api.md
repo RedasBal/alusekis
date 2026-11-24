@@ -126,9 +126,9 @@ Visada `202` (neatskleidžia, ar paskyra yra); `422 email_invalid` tik blogam fo
 
 ---
 
-## Parduotuvės (NI-02: `cities` ir `stores` ✅, `stores/{id}/prices` 🕓)
+## Parduotuvės (NI-02: `cities`, `stores`; NI-03: `stores/{id}/prices`)
 
-Prisijungti nereikia (leidžiama svčiui). Vietos duomenys naudojami tik vienai paieškai: nesaugomi ir nelogginami.
+Prisijungti nereikia (leidžiama svečiui). Vietos duomenys naudojami tik vienai paieškai: nesaugomi ir nelogginami.
 
 ### ✅ `GET /api/v1/cities`
 Miestų sąrašas pagal pavadinimą.
@@ -162,19 +162,34 @@ Blogos reikšmės, abu režimai kartu, nė vieno ar ne visi trys GPS parametrai 
 ```
 Seed koordinatės yra apytikslės (iki kvartalo tikslumo).
 
-### `GET /api/v1/stores/{storeId}/prices`
-Naujausia patvirtinta (`Approved`) kiekvieno produkto kaina parduotuvėje.
+### ✅ `GET /api/v1/stores/{storeId}/prices?page=1&pageSize=20` (NI-03)
+Naujausia **patvirtinta** (`Approved`) kiekvieno produkto kaina parduotuvėje: pagal `ObservedAt` mažėjančiai, tada `Id` mažėjančiai. `Pending` ir `Rejected` įrašai neimami (klaidingai pažymėtas naujesnis įrašas nepaslepia senesnės galiojančios kainos). Prisijungti nereikia.
+
+| Parametras | Taisyklė |
+|---|---|
+| `page` | 1–100000, numatyta 1 |
+| `pageSize` | 1–100, numatyta 20 |
+
+Blogos reikšmės – `422 validation_failed`, neskaitomas skaičius – `400 bad_request`, nezinoma parduotuvė – `404 not_found`. Parduotuvė be kainų – `200` su tuščiu `items` ir `total: 0`. Rikiavimas stabilus: produkto pavadinimas (be diakritikų ir didžiųjų raidžių skirtumo), tada talpa.
+
+`isStale` = `true`, kai `observedAt` senesnis nei 7 paros pagal **serverio** laikrodį (lygiai 7 paros – dar ne). Tai tik žyma, įrašas nekeičiamas.
 ```json
 {
   "store": { "id": 1, "name": "Maxima XX", "address": "Ukmergės g. 282" },
   "items": [
     {
       "priceEntryId": 41,
-      "product": { "id": 1, "name": "Švyturys Ekstra", "brand": "Švyturys", "volumeMl": 500 },
+      "productId": 1,
+      "productName": "Švyturys Ekstra",
+      "volumeMl": 500,
       "priceCents": 149,
-      "observedAt": "2026-10-30T09:00:00Z"
+      "observedAt": "2026-10-30T09:00:00Z",
+      "isStale": true
     }
-  ]
+  ],
+  "total": 1,
+  "page": 1,
+  "pageSize": 20
 }
 ```
 

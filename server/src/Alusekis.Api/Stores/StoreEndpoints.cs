@@ -34,7 +34,40 @@ public static class StoreEndpoints
     {
         v1.MapGet("/cities", GetCities);
         v1.MapGet("/stores", GetStores);
+        v1.MapGet("/stores/{id:long}/prices", GetStorePrices);
         return v1;
+    }
+
+    /// <summary>
+    /// Latest approved price of each product in one store, paged. A price older than 7 days
+    /// (server time) carries <c>isStale</c>; the entry itself is never changed.
+    /// </summary>
+    private static async Task<IResult> GetStorePrices(
+        HttpContext http,
+        AppDbContext db,
+        TimeProvider clock,
+        long id,
+        int? page,
+        int? pageSize,
+        CancellationToken ct)
+    {
+        var pageNumber = page ?? 1;
+        var size = pageSize ?? StorePrices.DefaultPageSize;
+
+        if (pageNumber is < 1 or > StorePrices.MaxPage)
+        {
+            return Invalid(http, $"page must be between 1 and {StorePrices.MaxPage}.");
+        }
+
+        if (size is < 1 or > StorePrices.MaxPageSize)
+        {
+            return Invalid(http, $"pageSize must be between 1 and {StorePrices.MaxPageSize}.");
+        }
+
+        var result = await StorePrices.QueryAsync(db, clock.GetUtcNow().UtcDateTime, id, pageNumber, size, ct);
+        return result is null
+            ? ErrorResponses.Result(http, StatusCodes.Status404NotFound, ErrorCodes.NotFound, "Store not found.")
+            : Results.Ok(result);
     }
 
     private static async Task<IResult> GetCities(AppDbContext db, CancellationToken ct)
