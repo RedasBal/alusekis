@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/api_error.dart';
 import '../../core/api/api_error_messages_lt.dart';
+import '../compare/compare_models.dart';
 import 'product_models.dart';
 
 /// Product search on the server. Guests may call it.
@@ -32,6 +33,30 @@ class ProductRepository {
       );
     }
   }
+
+  /// The product's newest valid price in every store, sorted by the server.
+  Future<ProductComparison> productPrices(
+    int productId,
+    PriceSort sort, {
+    CancelToken? cancelToken,
+  }) async {
+    final data = await _api.get(
+      '/products/$productId/prices',
+      queryParameters: {'sort': sort.apiValue},
+      cancelToken: cancelToken,
+    );
+    try {
+      return ProductComparison.fromJson(data as Map<String, dynamic>);
+    } on TypeError {
+      throw _unreadable();
+    } on FormatException {
+      throw _unreadable();
+    }
+  }
+
+  ApiException _unreadable() => const ApiException(
+        ApiError(kind: ApiErrorKind.unknown, userMessage: messageForUnknown),
+      );
 }
 
 final productRepositoryProvider =
