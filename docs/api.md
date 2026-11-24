@@ -236,25 +236,43 @@ Rikiavimas: pirma pavadinimai, kurie **prasideda** užklausa, tada pagal normali
 ```
 `409 conflict` – produktas su tuo pačiu normalizuotu pavadinimu ir talpa jau yra.
 
-### `GET /api/v1/products/{productId}/compare?cityId=1`
-Naujausia patvirtinta produkto kaina kiekvienoje parduotuvėje, pigiausia pirma.
+### ✅ `GET /api/v1/products/{productId}/prices?sort=asc|desc` (NI-05)
+Palyginimas: to paties produkto naujausia **patvirtinta** (`Approved`) kaina **kiekvienoje parduotuvėje** (pagal `ObservedAt` mažėjančiai, tada `Id`). `Rejected` ir `Pending` įrašai neimami. Prisijungti nereikia. Anksčiau planuotas `.../compare` pakeistas šiuo endpoint'u.
+
+Produkto tapatybė = ID + talpa: to paties pavadinimo kitos talpos produktas turi kitą ID ir niekada nemaišomas.
+
+| Parametras | Taisyklė |
+|---|---|
+| `sort` | `asc` (numatyta, pigiausia pirma) arba `desc` (brangiausia pirma), nepriklauso nuo raidžių dydžio; kita – `422 validation_failed` |
+
+Vienodos kainos visada rikiuojamos pagal `storeId` didėjančiai (ir `asc`, ir `desc`), todėl tvarka stabili. `isStale` = `true`, kai `observedAt` senesnis nei 7 paros pagal serverio laikrodį (lygiai 7 paros – dar ne). `storeCount` – kiek parduotuvių turi kainą; `singleStore` = `true`, kai tik viena (palyginti nėra su kuo, bet kaina vis tiek grąžinama).
+
+Nėra kainų – `200` su tuščiu `items` ir `storeCount: 0`. Nezinomas (ar neskaitinis) `productId` – `404 not_found`.
 ```json
 {
   "product": { "id": 1, "name": "Švyturys Ekstra", "brand": "Švyturys", "volumeMl": 500 },
   "items": [
     {
-      "store": { "id": 4, "name": "Lidl", "address": "Kalvarijų g. 202", "cityId": 1 },
       "priceEntryId": 52,
+      "storeId": 4,
+      "storeName": "Lidl",
+      "storeAddress": "Kalvarijų g. 202",
       "priceCents": 139,
-      "observedAt": "2026-10-28T15:00:00Z"
+      "observedAt": "2026-10-28T15:00:00Z",
+      "isStale": true
     },
     {
-      "store": { "id": 1, "name": "Maxima XX", "address": "Ukmergės g. 282", "cityId": 1 },
       "priceEntryId": 41,
+      "storeId": 1,
+      "storeName": "Maxima XX",
+      "storeAddress": "Ukmergės g. 282",
       "priceCents": 149,
-      "observedAt": "2026-10-30T09:00:00Z"
+      "observedAt": "2026-10-30T09:00:00Z",
+      "isStale": true
     }
-  ]
+  ],
+  "storeCount": 2,
+  "singleStore": false
 }
 ```
 

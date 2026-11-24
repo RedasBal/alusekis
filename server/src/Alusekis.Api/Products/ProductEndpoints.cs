@@ -10,7 +10,44 @@ public static class ProductEndpoints
     public static RouteGroupBuilder MapProducts(this RouteGroupBuilder v1)
     {
         v1.MapGet("/products/search", Search);
+        v1.MapGet("/products/{id:long}/prices", GetPrices);
         return v1;
+    }
+
+    /// <summary>
+    /// The product's newest valid price in every store. <c>sort</c> is <c>asc</c> (default, cheapest
+    /// first) or <c>desc</c>; anything else is rejected.
+    /// </summary>
+    private static async Task<IResult> GetPrices(
+        HttpContext http,
+        AppDbContext db,
+        TimeProvider clock,
+        long id,
+        string? sort,
+        CancellationToken ct)
+    {
+        bool descending;
+        if (sort is null || sort.Equals("asc", StringComparison.OrdinalIgnoreCase))
+        {
+            descending = false;
+        }
+        else if (sort.Equals("desc", StringComparison.OrdinalIgnoreCase))
+        {
+            descending = true;
+        }
+        else
+        {
+            return ErrorResponses.Result(
+                http,
+                StatusCodes.Status422UnprocessableEntity,
+                ErrorCodes.ValidationFailed,
+                "sort must be asc or desc.");
+        }
+
+        var result = await ProductPrices.QueryAsync(db, clock.GetUtcNow().UtcDateTime, id, descending, ct);
+        return result is null
+            ? ErrorResponses.Result(http, StatusCodes.Status404NotFound, ErrorCodes.NotFound, "Product not found.")
+            : Results.Ok(result);
     }
 
     /// <summary>
