@@ -115,6 +115,9 @@ namespace Alusekis.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsLargeChange")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("ObservedAt")
                         .HasColumnType("TEXT");
 
@@ -253,6 +256,11 @@ namespace Alusekis.Api.Data.Migrations
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestFingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ResponseJson")

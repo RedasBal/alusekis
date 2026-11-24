@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Alusekis.Api.Auth;
+using Alusekis.Api.Prices;
 using Alusekis.Api.Products;
 using Alusekis.Api.Stores;
 using Microsoft.AspNetCore.Http.Timeouts;
@@ -17,6 +18,7 @@ public static class ApiPipeline
     public static IServiceCollection AddAlusekisApi(this IServiceCollection services)
     {
         services.AddSingleton(TimeProvider.System);
+        services.AddAlusekisPrices();
 
         // camelCase property names (web default), enums as their names, UTC dates as ISO 8601.
         services.ConfigureHttpJsonOptions(options =>
@@ -81,6 +83,7 @@ public static class ApiPipeline
         v1.MapAuth();
         v1.MapStores();
         v1.MapProducts();
+        v1.MapPrices();
 
         return v1;
     }

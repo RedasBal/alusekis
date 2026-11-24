@@ -32,4 +32,10 @@ public class PriceEntry
 
     /// <summary>When the row was recorded on the server (UTC).</summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// The submitter confirmed a change of more than 50 % against the previous valid price of the
+    /// same product in the same store (FR-08). Set on insert, never changed.
+    /// </summary>
+    public bool IsLargeChange { get; set; }
 }
