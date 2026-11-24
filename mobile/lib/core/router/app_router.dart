@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/account/account_screen.dart';
+import '../../features/compare/compare_screen.dart';
+import '../../features/compare/open_comparison.dart';
 import '../../features/account/settings_screen.dart';
 import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/login_screen.dart';
@@ -83,6 +85,21 @@ GoRouter buildRouter() => GoRouter(
               ],
             ),
           ],
+        ),
+        // Outside the tab shell, so the same screen can be opened from the
+        // search tab and from the stores tab and always has a way back.
+        GoRoute(
+          path: '/products/:id/prices',
+          redirect: (context, state) =>
+              int.tryParse(state.pathParameters['id'] ?? '') == null ? Routes.search : null,
+          builder: (context, state) {
+            final hint = state.extra is ProductHint ? state.extra as ProductHint : null;
+            return ProductCompareScreen(
+              productId: int.parse(state.pathParameters['id']!),
+              productName: hint?.name,
+              volumeMl: hint?.volumeMl,
+            );
+          },
         ),
       ],
     );

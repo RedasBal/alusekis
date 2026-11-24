@@ -13,6 +13,11 @@ import 'compare_models.dart';
 /// What the price is: shown on the comparison so nobody expects a deposit in it.
 const String priceExplanation = 'Kaina – vienos pakuotės kaina be užstato';
 
+const String noPricesMessage = 'Šiam produktui kainų kol kas nėra';
+const String singleStoreMessage = 'Palyginimui trūksta kitų parduotuvių duomenų';
+const String staleMessage = 'Neatnaujinta daugiau nei 7 dienas';
+const String cheapestLabel = 'Pigiausia';
+
 /// The same product's prices in different stores. Guests may open it.
 class ProductCompareScreen extends ConsumerWidget {
   const ProductCompareScreen({
@@ -35,9 +40,13 @@ class ProductCompareScreen extends ConsumerWidget {
     final controller = ref.read(provider.notifier);
     final view = state.view;
 
-    final loaded = view is ViewSuccess<ProductComparison> ? view.data.product : null;
+    final comparison = view is ViewSuccess<ProductComparison> ? view.data : null;
+    final loaded = comparison?.product;
     final name = loaded?.name ?? productName;
     final volume = loaded?.volumeMl ?? volumeMl;
+
+    // With fewer than two prices there is nothing to put in order.
+    final showSort = comparison == null || comparison.offers.length >= 2;
 
     return AppScaffold(
       title: 'Kainų palyginimas',
@@ -46,13 +55,15 @@ class ProductCompareScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _Header(name: name, volumeMl: volume, brand: loaded?.brand),
-            _SortChoice(selected: state.sort, onSelected: controller.setSort),
+            if (showSort) _SortChoice(selected: state.sort, onSelected: controller.setSort),
             const Divider(height: 1),
             Expanded(
               child: AsyncStateView<ProductComparison>(
                 state: view,
                 onRetry: controller.load,
-                builder: (context, comparison) => _OfferList(comparison: comparison),
+                builder: (context, comparison) => comparison.offers.isEmpty
+                    ? const _NoPrices()
+                    : _OfferList(comparison: comparison),
               ),
             ),
           ],
@@ -126,6 +137,32 @@ class _SortChoice extends StatelessWidget {
   }
 }
 
+/// The product exists but no store has a confirmed price for it.
+class _NoPrices extends StatelessWidget {
+  const _NoPrices();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.inbox_outlined, size: 48, color: theme.colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(noPricesMessage, textAlign: TextAlign.center, style: theme.textTheme.bodyLarge),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OfferList extends StatelessWidget {
   const _OfferList({required this.comparison});
 
@@ -134,29 +171,70 @@ class _OfferList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final offers = comparison.offers;
-    final cheapest = cheapestPriceCents(offers);
+    final cheapest = cheapestPriceCents(offers)!;
+    final dearest = offers.map((o) => o.priceCents).reduce((a, b) => a > b ? a : b);
 
-    return ListView.separated(
-      itemCount: offers.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final offer = offers[index];
-        return _OfferRow(
-          offer: offer,
-          extraCents: cheapest == null ? 0 : differenceFromCheapestCents(offer, cheapest),
-        );
-      },
+    // "Pigiausia" only means something when some store is dearer; if every
+    // price is the same, or there is just one, labelling it would be noise.
+    final markCheapest = offers.length >= 2 && cheapest < dearest;
+
+    return ListView(
+      children: [
+        if (comparison.singleStore) const _SingleStoreNotice(),
+        for (final offer in offers) ...[
+          _OfferRow(
+            offer: offer,
+            extraCents: differenceFromCheapestCents(offer, cheapest),
+            isCheapest: markCheapest && offer.priceCents == cheapest,
+          ),
+          const Divider(height: 1),
+        ],
+      ],
+    );
+  }
+}
+
+/// Only one store has a price: it is shown, with a note why nothing is compared.
+class _SingleStoreNotice extends StatelessWidget {
+  const _SingleStoreNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: scheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline, color: scheme.onSecondaryContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(singleStoreMessage, style: TextStyle(color: scheme.onSecondaryContainer)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _OfferRow extends StatelessWidget {
-  const _OfferRow({required this.offer, required this.extraCents});
+  const _OfferRow({required this.offer, required this.extraCents, required this.isCheapest});
 
   final StoreOffer offer;
 
   /// How much dearer than the cheapest offer, in cents.
   final int extraCents;
+
+  /// Marked with the word "Pigiausia" (and an icon), never by colour alone.
+  final bool isCheapest;
 
   @override
   Widget build(BuildContext context) {
@@ -180,6 +258,22 @@ class _OfferRow extends StatelessWidget {
                     'Patikrinta: ${formatDateTime(offer.observedAt)}',
                     style: theme.textTheme.bodySmall,
                   ),
+                  if (offer.isStale) ...[
+                    const SizedBox(height: 4),
+                    // A text and an icon, not a colour, tells the price is old.
+                    Row(
+                      children: [
+                        Icon(Icons.schedule, size: 16, color: theme.colorScheme.error),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            staleMessage,
+                            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -188,7 +282,19 @@ class _OfferRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(formatPrice(offer.priceCents), style: theme.textTheme.titleLarge),
-                if (extraCents > 0)
+                if (isCheapest)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        cheapestLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  )
+                else if (extraCents > 0)
                   Text(
                     '${formatPriceDifference(extraCents)} brangiau',
                     style: theme.textTheme.bodySmall,
