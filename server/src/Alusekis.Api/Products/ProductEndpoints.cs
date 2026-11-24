@@ -1,4 +1,5 @@
 using Alusekis.Api.Api;
+using Alusekis.Api.Auth;
 using Alusekis.Api.Data;
 using Alusekis.Api.Domain;
 
@@ -9,6 +10,8 @@ public static class ProductEndpoints
 {
     public static RouteGroupBuilder MapProducts(this RouteGroupBuilder v1)
     {
+        // Guests: 401 when not signed in, 403 for the Guest role (checked only here, on the server).
+        v1.MapPost("/products", ProductCreation.CreateAsync).RequireAuthorization(Policies.User);
         v1.MapGet("/products/search", Search);
         v1.MapGet("/products/{id:long}/prices", GetPrices);
         v1.MapGet("/products/{productId:long}/stores/{storeId:long}/history", GetHistory);
