@@ -8,6 +8,8 @@ import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
 import '../history/open_history.dart';
+import '../report/open_report.dart';
+import '../report/report_models.dart';
 import '../submit_price/open_submit_price.dart';
 import '../submit_price/submit_price_models.dart';
 import 'compare_controller.dart';
@@ -68,6 +70,18 @@ class ProductCompareScreen extends ConsumerWidget {
                     ? const _NoPrices()
                     : _OfferList(
                         comparison: comparison,
+                        onReportPrice: (offer) => openReport(
+                          context,
+                          ref,
+                          ReportTarget(
+                            priceEntryId: offer.priceEntryId,
+                            productName: comparison.product.name,
+                            volumeMl: comparison.product.volumeMl,
+                            storeName: offer.storeName,
+                            priceCents: offer.priceCents,
+                            observedAt: offer.observedAt,
+                          ),
+                        ),
                         onSubmitPrice: (offer) async {
                           final saved = await openSubmitPrice(
                             context,
@@ -187,9 +201,14 @@ class _NoPrices extends StatelessWidget {
 }
 
 class _OfferList extends StatelessWidget {
-  const _OfferList({required this.comparison, required this.onSubmitPrice});
+  const _OfferList({
+    required this.comparison,
+    required this.onReportPrice,
+    required this.onSubmitPrice,
+  });
 
   final ProductComparison comparison;
+  final void Function(StoreOffer offer) onReportPrice;
   final void Function(StoreOffer offer) onSubmitPrice;
 
   @override
@@ -220,6 +239,7 @@ class _OfferList extends StatelessWidget {
               storeName: offer.storeName,
             ),
             onSubmit: () => onSubmitPrice(offer),
+            onReport: () => onReportPrice(offer),
           ),
           const Divider(height: 1),
         ],
@@ -266,12 +286,16 @@ class _OfferRow extends StatelessWidget {
     required this.isCheapest,
     required this.onTap,
     required this.onSubmit,
+    required this.onReport,
   });
 
   final StoreOffer offer;
 
   /// Opens "Atnaujinti kainą" for this product in this store.
   final VoidCallback onSubmit;
+
+  /// Opens "Pranešti apie klaidą" for this price.
+  final VoidCallback onReport;
 
   /// Opens this store's price history of the product.
   final VoidCallback onTap;
@@ -362,7 +386,13 @@ class _OfferRow extends StatelessWidget {
     ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-          child: SubmitPriceButton(onPressed: onSubmit),
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SubmitPriceButton(onPressed: onSubmit),
+              ReportButton(onPressed: onReport),
+            ],
+          ),
         ),
       ],
     );

@@ -8,6 +8,8 @@ import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/async_state_view.dart';
 import '../age_gate/age_gate_host.dart';
 import '../compare/open_comparison.dart';
+import '../report/open_report.dart';
+import '../report/report_models.dart';
 import '../submit_price/open_submit_price.dart';
 import '../submit_price/submit_price_models.dart';
 import 'store_prices_controller.dart';
@@ -43,6 +45,18 @@ class StorePricesScreen extends ConsumerWidget {
             moreError: state.moreError,
             onRetry: controller.load,
             onLoadMore: controller.loadMore,
+            onReportPrice: (price) => openReport(
+              context,
+              ref,
+              ReportTarget(
+                priceEntryId: price.priceEntryId,
+                productName: price.productName,
+                volumeMl: price.volumeMl,
+                storeName: data.store.name,
+                priceCents: price.priceCents,
+                observedAt: price.observedAt,
+              ),
+            ),
             onSubmitPrice: (price) async {
               final saved = await openSubmitPrice(
                 context,
@@ -75,6 +89,7 @@ class _PricesList extends StatelessWidget {
     required this.moreError,
     required this.onRetry,
     required this.onLoadMore,
+    required this.onReportPrice,
     required this.onSubmitPrice,
   });
 
@@ -83,6 +98,7 @@ class _PricesList extends StatelessWidget {
   final String? moreError;
   final VoidCallback onRetry;
   final VoidCallback onLoadMore;
+  final void Function(StorePrice price) onReportPrice;
   final void Function(StorePrice price) onSubmitPrice;
 
   @override
@@ -103,6 +119,7 @@ class _PricesList extends StatelessWidget {
               // Saved data means the server cannot be reached (FR-16).
               offline: data.isFromCache,
               onSubmit: () => onSubmitPrice(price),
+              onReport: () => onReportPrice(price),
             ),
         if (loadingMore)
           const Padding(
@@ -137,11 +154,17 @@ class _PricesList extends StatelessWidget {
 }
 
 class _PriceRow extends StatelessWidget {
-  const _PriceRow({required this.price, required this.offline, required this.onSubmit});
+  const _PriceRow({
+    required this.price,
+    required this.offline,
+    required this.onSubmit,
+    required this.onReport,
+  });
 
   final StorePrice price;
   final bool offline;
   final VoidCallback onSubmit;
+  final VoidCallback onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +232,13 @@ class _PriceRow extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-          child: SubmitPriceButton(onPressed: onSubmit, offline: offline),
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              SubmitPriceButton(onPressed: onSubmit, offline: offline),
+              ReportButton(onPressed: onReport, offline: offline),
+            ],
+          ),
         ),
         const Divider(height: 1),
       ],

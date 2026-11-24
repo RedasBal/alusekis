@@ -13,6 +13,9 @@ abstract final class Routes {
   static String submitPrice(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/price';
 
+  /// "Pranešti apie klaidą" for one price entry.
+  static String reportPrice(int priceEntryId) => '/prices/$priceEntryId/report';
+
   /// Price history of one product in one store; opened from the comparison.
   static String priceHistory(int productId, int storeId) =>
       '/products/$productId/stores/$storeId/history';
